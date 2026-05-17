@@ -309,30 +309,44 @@ const handleSubmit = async () => {
     submitLoading.value = true
     try {
       if (isEdit.value && formData.id) {
-        await bookmarkApi.updateBookmark(formData.id, {
+        const res: any = await bookmarkApi.updateBookmark(formData.id, {
           title: formData.title,
           url: formData.url,
           description: formData.description,
           icon: formData.icon
         })
-        ElMessage.success('更新成功')
+        if (res.code === 200) {
+          ElMessage.success('更新成功')
+        } else {
+          ElMessage.error(res.message || '更新失败')
+          return
+        }
       } else {
-        await bookmarkApi.createBookmark({
+        const res: any = await bookmarkApi.createBookmark({
           title: formData.title,
           url: formData.url,
           description: formData.description,
           icon: formData.icon,
-          createdBy: userStore.userInfo?.username,
+          createdBy: userStore.userInfo?.username || 'anonymous',
           isPrivate: 0,
           clickCount: 0
         })
-        ElMessage.success('创建成功')
+        if (res.code === 200) {
+          ElMessage.success('创建成功')
+        } else if (res.code === 409) {
+          ElMessage.warning(res.message || '该网址已被收藏')
+          return
+        } else {
+          ElMessage.error(res.message || '创建失败')
+          return
+        }
       }
       dialogVisible.value = false
       loadBookmarkList()
-    } catch (error) {
+    } catch (error: any) {
       console.error('保存失败:', error)
-      ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+      const errorMsg = error?.response?.data?.message || error?.message || (isEdit.value ? '更新失败' : '创建失败')
+      ElMessage.error(errorMsg)
     } finally {
       submitLoading.value = false
     }

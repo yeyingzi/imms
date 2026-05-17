@@ -60,6 +60,15 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
 
     @Override
     public void createBookmark(Bookmark bookmark) {
+        if (!StringUtils.hasText(bookmark.getCreatedBy())) {
+            bookmark.setCreatedBy("anonymous");
+        }
+        if (bookmark.getIsPrivate() == null) {
+            bookmark.setIsPrivate(0);
+        }
+        if (bookmark.getClickCount() == null) {
+            bookmark.setClickCount(0);
+        }
         this.save(bookmark);
     }
 
