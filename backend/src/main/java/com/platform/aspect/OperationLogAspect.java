@@ -3,7 +3,7 @@ package com.platform.aspect;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.platform.entity.OperationLog;
 import com.platform.mapper.OperationLogMapper;
-import com.platform.util.JwtUtil;
+import com.platform.util.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 public class OperationLogAspect {
 
     private final OperationLogMapper operationLogMapper;
-    private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
 
     @Pointcut("execution(* com.platform.controller.*.*(..)) && " +
@@ -46,13 +45,10 @@ public class OperationLogAspect {
 
         String username = "anonymous";
         Long userId = null;
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                String token = authHeader.substring(7);
-                username = jwtUtil.getUsernameFromToken(token);
-                userId = jwtUtil.getUserIdFromToken(token);
-            } catch (Exception ignored) {}
+
+        if (UserContext.isLogin()) {
+            username = UserContext.getCurrentUsername();
+            userId = UserContext.getCurrentUserId();
         }
 
         String moduleName = extractModuleName(uri);

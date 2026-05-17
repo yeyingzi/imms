@@ -8,6 +8,7 @@
 | `.env` | 环境变量文件 | 数据库密码、API密钥 |
 | `*.pem`, `*.key` | 证书密钥文件 | SSL证书私钥 |
 | `credentials.json` | 凭据文件 | 第三方服务凭据 |
+| `.env.example` | 环境变量示例 | 配置参考模板 |
 
 ### 后端构建产物
 | 文件类型 | 说明 |
@@ -29,41 +30,88 @@
 | `logs/` | 日志目录 |
 | `*.tmp`, `*.bak` | 临时/备份文件 |
 
-## 如何配置敏感信息
+## 敏感信息配置说明
 
-### 方式一：创建本地配置文件
+本项目使用 **环境变量** 来管理敏感配置，如数据库密码、Redis密码、JWT密钥等。
+
+### 方式一：使用环境变量（推荐）
+
+在 `application.yml` 中使用占位符：
+
+```yaml
+spring:
+  datasource:
+    password: ${DB_PASSWORD}  # 从环境变量读取
+  data:
+    redis:
+      password: ${REDIS_PASSWORD}  # Redis密码
+      host: ${REDIS_HOST}          # Redis主机
+```
+
+创建 `.env` 文件（已忽略，不会被git追踪）：
+
+```bash
+# 创建环境变量文件
+cp .env.example .env
+
+# 编辑实际配置
+DB_PASSWORD=your_actual_password
+REDIS_PASSWORD=your_redis_password
+JWT_SECRET=your-secure-jwt-secret-key
+```
+
+### 方式二：使用本地配置文件
 
 ```bash
 # 创建本地配置文件（不会被 git 跟踪）
 cp backend/src/main/resources/application.yml backend/src/main/resources/application-local.yml
 ```
 
-然后在 `application-local.yml` 中修改敏感配置：
+然后在 `application-local.yml` 中修改敏感配置。
+
+### 方式三：直接在配置文件中使用默认值
 
 ```yaml
 spring:
   datasource:
-    password: 你的真实密码  # 修改为真实密码
+    password: ${DB_PASSWORD:your_default_password}  # 有默认值
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:your_default_redis_password}
 ```
 
-### 方式二：使用环境变量
+## Redis 配置说明
 
-```yaml
-spring:
-  datasource:
-    password: ${DB_PASSWORD}  # 使用环境变量
-```
+项目新增了 Redis 依赖，用于会话管理和缓存。
 
-### 方式三：创建配置模板
+### Redis 配置项
 
-将 `application.yml` 复制为模板文件：
+| 配置项 | 环境变量 | 说明 |
+|-------|---------|------|
+| Redis主机 | `REDIS_HOST` | 默认 `localhost` |
+| Redis端口 | `REDIS_PORT` | 默认 `6379` |
+| Redis密码 | `REDIS_PASSWORD` | 无密码留空 |
+
+### 环境变量示例文件
+
+项目根目录的 `.env.example` 文件提供了完整的环境变量模板：
 
 ```bash
-# 创建模板文件
-cp backend/src/main/resources/application.yml backend/src/main/resources/application.yml.tpl
-```
+# 数据库配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=platform
+DB_USERNAME=root
+DB_PASSWORD=your_mysql_password
 
-然后修改 `application.yml` 填写占位符。
+# Redis配置
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+
+# JWT密钥
+JWT_SECRET=your-jwt-secret-key-must-be-at-least-256-bits-long
+```
 
 ## 重要提示
 
@@ -71,6 +119,7 @@ cp backend/src/main/resources/application.yml backend/src/main/resources/applica
 1. ✅ 移除所有真实的密码、密钥
 2. ✅ 使用环境变量或配置文件管理敏感信息
 3. ✅ `backend/src/main/resources/application.yml` 中不包含真实凭据
+4. ✅ `.env` 文件不会被 git 追踪（已在 .gitignore 中）
 
 ## GitHub 敏感信息检测
 

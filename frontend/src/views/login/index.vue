@@ -220,6 +220,7 @@ const handleLogin = async () => {
         userStore.token = res.data.token
         userStore.userInfo = res.data.user
         userStore.permissions = res.data.user.permissions || []
+        localStorage.setItem('user_cache', JSON.stringify(res.data.user))
         ElMessage.success('登录成功')
         router.push('/home')
       } catch (error: any) {

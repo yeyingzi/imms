@@ -29,6 +29,7 @@
 | 后端框架 | Spring Boot | 3.x |
 | ORM | MyBatis Plus | ^3.5 |
 | 数据库 | MySQL | 8.0+ |
+| 缓存/会话 | Redis | 6.0+ |
 
 ### 项目目录结构
 
@@ -98,6 +99,7 @@ project_V/
 | 前端 Dev Server | **5173** | Vite 开发服务器 | `frontend/vite.config.ts` → `server.port` |
 | 后端 API 服务 | **8888** | Spring Boot 应用 | `backend/src/main/resources/application.yml` |
 | MySQL 数据库 | **3306** | 数据存储 | MySQL 配置文件 |
+| Redis 缓存 | **6379** | 会话管理和缓存 | Redis 配置文件 |
 
 ### 网络要求
 
@@ -186,7 +188,103 @@ INSERT INTO exm_example (name, description, status) VALUES
 
 ---
 
-### Step 2：启动后端服务
+### Step 2：安装并配置 Redis
+
+Redis 用于会话管理和数据缓存，是本系统的必需组件。
+
+#### 2.1 安装 Redis（Linux/Ubuntu）
+
+```bash
+# 更新包列表
+sudo apt update
+
+# 安装 Redis
+sudo apt install redis-server
+
+# 启动 Redis 服务
+sudo systemctl start redis
+
+# 设置开机自启动
+sudo systemctl enable redis
+
+# 检查 Redis 是否运行
+sudo systemctl status redis
+```
+
+#### 2.2 安装 Redis（Windows）
+
+Windows 用户可以使用 [Memurai](https://www.memurai.com/) 或 [Redis for Windows](https://github.com/tporadowski/redis/releases)：
+
+```powershell
+# 下载并解压 Redis for Windows
+# 启动 Redis
+redis-server.exe
+```
+
+#### 2.3 配置 Redis
+
+编辑 Redis 配置文件（通常位于 `/etc/redis/redis.conf`）：
+
+```bash
+# 编辑配置文件
+sudo nano /etc/redis/redis.conf
+```
+
+**关键配置项：**
+
+```conf
+# 绑定地址（允许外部访问，生产环境建议限制IP）
+bind 0.0.0.0
+
+# 设置访问密码（强烈建议设置！）
+requirepass 你的Redis密码
+
+# 最大内存限制（根据服务器配置调整）
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+
+# 开启 AOF 持久化（数据安全）
+appendonly yes
+
+# 关闭保护模式（配合密码使用）
+protected-mode no
+```
+
+#### 2.4 测试 Redis 连接
+
+```bash
+# 进入 Redis CLI
+redis-cli
+
+# 使用密码认证（如果设置了密码）
+AUTH 你的Redis密码
+
+# 测试基本命令
+PING
+# 应返回 PONG
+
+# 测试设置和读取
+SET testkey "hello"
+GET testkey
+# 应返回 hello
+
+# 退出
+EXIT
+```
+
+#### 2.5 配置防火墙
+
+```bash
+# 开放 Redis 端口
+sudo ufw allow 6379/tcp
+
+# 如果需要限制来源IP
+sudo ufw allow from 192.168.1.0/24 to any port 6379
+```
+
+---
+
+### Step 3：启动后端服务
 
 ```bash
 cd F:/OutPut/Trea/project_V/backend
@@ -215,9 +313,38 @@ server:
 ```
 同时需要同步修改 `frontend/vite.config.ts` 的 proxy target。
 
+**Redis 连接配置说明：**
+
+后端 `application.yml` 中的 Redis 配置：
+
+```yaml
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}        # Redis主机地址
+      port: ${REDIS_PORT:6379}           # Redis端口
+      password: ${REDIS_PASSWORD:}         # Redis密码（无密码留空）
+      database: 0                         # Redis数据库索引
+      timeout: 10000ms                   # 连接超时时间
+```
+
+可以通过环境变量覆盖默认配置：
+
+```bash
+# Linux/Mac
+export REDIS_HOST=192.168.1.100
+export REDIS_PORT=6379
+export REDIS_PASSWORD=your_redis_password
+
+# Windows PowerShell
+$env:REDIS_HOST="192.168.1.100"
+$env:REDIS_PORT="6379"
+$env:REDIS_PASSWORD="your_redis_password"
+```
+
 ---
 
-### Step 3：安装前端依赖并启动
+### Step 4：安装前端依赖并启动
 
 ```bash
 cd F:/OutPut/Trea/project_V/frontend
@@ -251,7 +378,7 @@ npm run dev
 
 ---
 
-### Step 4：登录验证
+### Step 5：登录验证
 
 1. 打开浏览器访问 `http://localhost:5173`
 2. 进入登录页面
@@ -436,6 +563,7 @@ PUT /api/v1/modules/{id}/toggle  →  DB: sys_module.status = 0
 
 - [ ] 数据库 `platform` 已创建，包含 9 张系统表
 - [ ] 示例模块表 `exm_example` 已创建，包含 3 条测试数据
+- [ ] Redis 服务已启动，端口 6379 可访问
 - [ ] 后端服务正常启动，控制台无报错
 - [ ] 前端服务正常启动，能访问 `http://localhost:5173`
 - [ ] 使用 `admin / Admin@123456` 可以成功登录
@@ -469,6 +597,15 @@ Platform Application Started      ✅ 应用启动完成
 [App] User info loaded: [...]     ✅ 用户信息获取成功
 ```
 
+**Redis 会话验证（后端日志）：**
+
+登录后观察后端控制台：
+
+```
+[Session] 会话已保存到Redis: userId=1  ✅ Redis会话存储成功
+[JwtAuth] 从Redis获取会话成功: userId=1  ✅ 会话恢复成功
+```
+
 ---
 
 ## 6. 常见部署问题
@@ -492,6 +629,52 @@ spring:
     url: jdbc:mysql://localhost:3306/platform?useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: your_password    # ← 改为你的 MySQL 密码
+```
+
+### Q1.5：Redis 连接失败
+
+**症状：** 登录时报错 `Unable to connect to Redis` 或 `Connection refused`
+
+| 可能原因 | 解决方案 |
+|---------|---------|
+| Redis 未启动 | 启动 Redis 服务：`sudo systemctl start redis`（Linux） |
+| 端口被防火墙阻止 | 开放端口：`sudo ufw allow 6379/tcp` |
+| Redis 只监听本地 | 修改 `redis.conf`：`bind 0.0.0.0` |
+| 密码错误 | 检查 `application.yml` 中的 Redis 密码配置 |
+| 保护模式未关闭 | 修改 `redis.conf`：`protected-mode no` |
+
+**检查 Redis 状态：**
+```bash
+# 检查 Redis 服务状态
+sudo systemctl status redis
+
+# 检查 Redis 监听端口
+sudo netstat -tlnp | grep redis
+
+# 应该看到 0.0.0.0:6379 或 *:6379
+```
+
+**检查 Redis 连接：**
+```bash
+redis-cli -a 你的Redis密码 PING
+# 应该返回 PONG
+```
+
+**快速修复（开发环境）：**
+```bash
+# 1. 修改 Redis 配置
+sudo nano /etc/redis/redis.conf
+
+# 2. 修改以下配置
+bind 0.0.0.0 ::1        # 改为监听所有地址
+requirepass 你的密码      # 设置密码
+protected-mode no        # 关闭保护模式
+
+# 3. 重启 Redis
+sudo systemctl restart redis
+
+# 4. 开放防火墙
+sudo ufw allow 6379/tcp
 ```
 
 ### Q2：前端依赖安装失败

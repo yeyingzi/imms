@@ -2,6 +2,7 @@ package com.platform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.platform.dto.LoginVO;
+import com.platform.dto.UserSession;
 import com.platform.dto.UserVO;
 import com.platform.entity.LoginLog;
 import com.platform.entity.Permission;
@@ -11,8 +12,10 @@ import com.platform.mapper.PermissionMapper;
 import com.platform.mapper.UserMapper;
 import com.platform.mapper.UserRoleMapper;
 import com.platform.service.AuthService;
+import com.platform.service.OptimizedUserSessionService;
 import com.platform.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -30,6 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginLogMapper loginLogMapper;
     private final UserRoleMapper userRoleMapper;
     private final JwtUtil jwtUtil;
+    private final OptimizedUserSessionService userSessionService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -74,6 +79,19 @@ public class AuthServiceImpl implements AuthService {
 
         saveLoginLog(user.getId(), username, 1, 1, "登录成功", ipAddress, userAgent);
 
+        UserSession session = UserSession.from(
+                user.getId(),
+                user.getUsername(),
+                user.getRealName(),
+                user.getAvatar(),
+                roleCodes,
+                permissionCodes,
+                token,
+                ipAddress
+        );
+
+        userSessionService.saveUserSession(session);
+
         LoginVO loginVO = new LoginVO();
         loginVO.setToken(token);
         loginVO.setRefreshToken(refreshToken);
@@ -84,6 +102,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(String token) {
+        try {
+            Long userId = jwtUtil.getUserIdFromToken(token);
+            if (userId != null) {
+                userSessionService.deleteUserSession(userId);
+            }
+        } catch (Exception e) {
+            log.error("登出时清理用户会话失败", e);
+        }
     }
 
     @Override
