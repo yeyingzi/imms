@@ -1,0 +1,80 @@
+# .gitignore 使用说明
+
+## 已忽略的文件类型
+
+### 敏感信息
+| 文件类型 | 说明 | 示例 |
+|:---|:---|:---|
+| `.env` | 环境变量文件 | 数据库密码、API密钥 |
+| `*.pem`, `*.key` | 证书密钥文件 | SSL证书私钥 |
+| `credentials.json` | 凭据文件 | 第三方服务凭据 |
+
+### 后端构建产物
+| 文件类型 | 说明 |
+|:---|:---|
+| `backend/target/` | Maven 编译输出目录 |
+| `*.jar`, `*.war` | Java 打包文件 |
+
+### 前端依赖和构建
+| 文件类型 | 说明 |
+|:---|:---|
+| `frontend/node_modules/` | NPM 包依赖（通常几百MB） |
+| `frontend/dist/` | Vite 构建输出 |
+| `frontend/.vite/` | Vite 缓存 |
+
+### 日志和临时文件
+| 文件类型 | 说明 |
+|:---|:---|
+| `*.log` | 日志文件 |
+| `logs/` | 日志目录 |
+| `*.tmp`, `*.bak` | 临时/备份文件 |
+
+## 如何配置敏感信息
+
+### 方式一：创建本地配置文件
+
+```bash
+# 创建本地配置文件（不会被 git 跟踪）
+cp backend/src/main/resources/application.yml backend/src/main/resources/application-local.yml
+```
+
+然后在 `application-local.yml` 中修改敏感配置：
+
+```yaml
+spring:
+  datasource:
+    password: 你的真实密码  # 修改为真实密码
+```
+
+### 方式二：使用环境变量
+
+```yaml
+spring:
+  datasource:
+    password: ${DB_PASSWORD}  # 使用环境变量
+```
+
+### 方式三：创建配置模板
+
+将 `application.yml` 复制为模板文件：
+
+```bash
+# 创建模板文件
+cp backend/src/main/resources/application.yml backend/src/main/resources/application.yml.tpl
+```
+
+然后修改 `application.yml` 填写占位符。
+
+## 重要提示
+
+⚠️ **首次上传前请确保**：
+1. ✅ 移除所有真实的密码、密钥
+2. ✅ 使用环境变量或配置文件管理敏感信息
+3. ✅ `backend/src/main/resources/application.yml` 中不包含真实凭据
+
+## GitHub 敏感信息检测
+
+GitHub 提供了敏感信息检测功能，建议：
+1. 首次推送后开启 GitHub Secret Scanning
+2. 定期检查 Security 标签页的警报
+3. 如果发现敏感信息泄露，立即轮换密钥

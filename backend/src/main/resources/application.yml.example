@@ -1,0 +1,45 @@
+# ============================================
+# 内网万用平台 - 配置示例文件
+# ============================================
+# 此文件为配置模板，请复制为 application.yml 后填写实际值
+# git 会忽略 application.yml 文件（如果在 .gitignore 中添加了相关规则）
+# ============================================
+
+server:
+  port: 8888
+
+spring:
+  application:
+    name: platform-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/platform?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: YOUR_PASSWORD_HERE  # ← 请修改为你的 MySQL 密码
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.platform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+jwt:
+  secret: platform-secret-key-for-jwt-token-generation-must-be-at-least-256-bits
+  expiration: 7200000
+  refresh-expiration: 604800000
+
+app:
+  version: v1.14.0
+  online-window-minutes: 30
+
+logging:
+  level:
+    com.platform: info
+    org.springframework: warn
