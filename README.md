@@ -190,7 +190,8 @@ mysql -u root -p platform < modules/example-module/sql/init.sql
 | [项目部署指南](docs/DEPLOYMENT_GUIDE.md) | 从零部署到正常运行（运维/使用者） |
 | [API 接口规范](docs/API_SPEC.md) | 后端 API 接口定义 |
 | [模块开发指南](docs/MODULE_DEVELOPMENT_GUIDE.md) | 如何开发自定义模块 |
-| [数据库表结构文档](docs/DATABASE_SCHEMA.md) | 数据库表结构详解（v1.13.1 新增） |
+| [数据库表结构文档](docs/DATABASE_SCHEMA.md) | 数据库表结构详解 |
+| [Git 配置指南](docs/GIT_CONFIG.md) | Git 仓库配置和常用命令（新） |
 | [更新日志](docs/CHANGELOG.md) | 版本更新记录 |
 
 > 当前版本: **v1.14.0**

@@ -98,6 +98,7 @@
 | 开发新模块 | MODULE_DEVELOPMENT_GUIDE.md |
 | 查看示例代码 | modules/example-module/ |
 | 部署到生产环境 | README.md → 部署步骤 |
+| Git 操作和配置 | GIT_CONFIG.md |
 | 查看版本更新 | CHANGELOG.md |
 
 ---
