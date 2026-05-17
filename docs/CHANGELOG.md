@@ -166,6 +166,11 @@ backend/src/main/java/com/platform/
 - **修复**：`pom.xml` 中的 `java.version` 从 21 调整为 17
 - **文件**：`backend/pom.xml`
 
+### 9. 用户创建时 phone/email 空字符串处理
+- **问题**：`UserServiceImpl.createUser()` 直接使用前端传入的 phone/email，当为空字符串时触发数据库唯一约束冲突
+- **修复**：在插入前检查 phone/email 是否为空字符串，如果为空则设置为 null
+- **文件**：`backend/src/main/java/com/platform/service/impl/UserServiceImpl.java`
+
 ---
 
 ## 📦 修改文件清单

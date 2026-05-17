@@ -56,6 +56,12 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setStatus(1);
+        if (user.getPhone() != null && user.getPhone().isEmpty()) {
+            user.setPhone(null);
+        }
+        if (user.getEmail() != null && user.getEmail().isEmpty()) {
+            user.setEmail(null);
+        }
         userMapper.insert(user);
     }
 
