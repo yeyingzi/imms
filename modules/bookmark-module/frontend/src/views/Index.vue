@@ -2,7 +2,7 @@
   <div class="bookmark-container">
     <div class="header-section">
       <h2>网址收藏合集</h2>
-      <el-button type="primary" @click="handleAdd" v-if="hasCreatePermission">
+      <el-button type="primary" size="large" @click="handleAdd" v-if="hasCreatePermission">
         <el-icon><Plus /></el-icon>
         添加网址
       </el-button>
@@ -38,7 +38,16 @@
     </div>
 
     <div class="bookmark-grid" v-loading="loading">
-      <el-empty v-if="!loading && bookmarkList.length === 0" description="暂无网址收藏" />
+      <template v-if="!loading && bookmarkList.length === 0">
+        <div class="empty-state">
+          <el-empty description="暂无网址收藏">
+            <el-button type="primary" @click="handleAdd">
+              <el-icon><Plus /></el-icon>
+              添加第一个网址
+            </el-button>
+          </el-empty>
+        </div>
+      </template>
 
       <el-card
         v-for="bookmark in bookmarkList"
@@ -458,6 +467,14 @@ const resetForm = () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 20px;
+  min-height: 400px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   min-height: 400px;
 }
 
