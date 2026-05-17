@@ -1,7 +1,7 @@
 package com.platform.module.bookmark.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.platform.common.Result;
+import com.platform.common.result.Result;
 import com.platform.module.bookmark.entity.Bookmark;
 import com.platform.module.bookmark.service.BookmarkService;
 import org.slf4j.Logger;
@@ -80,17 +80,6 @@ public class BookmarkController {
         } catch (Exception e) {
             logger.error("切换隐私状态失败", e);
             return Result.error(500, "操作失败");
-        }
-    }
-
-    @PutMapping("/{id}/click")
-    public Result<Void> incrementClickCount(@PathVariable Long id) {
-        try {
-            bookmarkService.incrementClickCount(id);
-            return Result.success();
-        } catch (Exception e) {
-            logger.error("记录点击次数失败", e);
-            return Result.error(200, "");  // 静默失败，不影响用户
         }
     }
 }

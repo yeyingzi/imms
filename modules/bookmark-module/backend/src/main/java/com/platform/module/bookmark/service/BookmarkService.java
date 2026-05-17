@@ -11,5 +11,4 @@ public interface BookmarkService extends IService<Bookmark> {
     void updateBookmark(Bookmark bookmark);
     void deleteBookmark(Long id);
     void togglePrivacy(Long id);
-    void incrementClickCount(Long id);
 }

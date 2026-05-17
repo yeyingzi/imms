@@ -24,8 +24,6 @@ public class Bookmark {
 
     private Integer isPrivate;
 
-    private Integer clickCount;
-
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 

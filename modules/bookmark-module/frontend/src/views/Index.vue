@@ -28,7 +28,6 @@
         <el-checkbox v-model="queryParams.mineOnly" @change="handleSearch">只看我的</el-checkbox>
         <el-select v-model="queryParams.sortBy" @change="handleSearch" style="width: 120px;">
           <el-option label="最新添加" value="createdAt" />
-          <el-option label="最热门" value="clickCount" />
         </el-select>
         <el-select v-model="queryParams.sortOrder" @change="handleSearch" style="width: 100px;">
           <el-option label="降序" value="desc" />
@@ -66,7 +65,7 @@
             />
             <h3 class="title">{{ bookmark.title }}</h3>
           </div>
-          <el-tooltip :content="bookmark.isPrivate === 1 ? '私密' : '公开'" placement="top">
+          <el-tooltip :content="bookmark.isPrivate === 1 ? '私密' : '公开'" placement="top" v-if="canTogglePrivacy(bookmark)">
             <el-switch
               v-model="bookmark.isPrivate"
               :active-value="1"
@@ -85,10 +84,6 @@
           <span class="creator">
             <el-icon><User /></el-icon>
             {{ bookmark.createdBy }}
-          </span>
-          <span class="clicks">
-            <el-icon><View /></el-icon>
-            {{ bookmark.clickCount }}次
           </span>
           <span class="time">{{ formatTime(bookmark.createdAt) }}</span>
         </div>
@@ -221,8 +216,7 @@ const formData = reactive({
 
 const formRules = {
   url: [
-    { required: true, message: '请输入URL地址', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的URL地址', trigger: 'blur' }
+    { required: true, message: '请输入URL地址', trigger: 'blur' }
   ],
   title: [
     { required: true, message: '请输入网页标题', trigger: 'blur' }
@@ -245,17 +239,44 @@ const canDelete = (bookmark: Bookmark) => {
   return isAdmin || (isOwner && userStore.permissions?.includes('bookmark-module:delete'))
 }
 
+const canTogglePrivacy = (bookmark: Bookmark) => {
+  const isAdmin = userStore.roles?.includes('SUPER_ADMIN')
+  const isOwner = bookmark.createdBy === userStore.userInfo?.username
+  return isAdmin || isOwner
+}
+
 onMounted(() => {
-  if (userStore.userInfo?.username) {
-    queryParams.currentUser = userStore.userInfo.username
-  }
   loadBookmarkList()
 })
 
 const loadBookmarkList = async () => {
   loading.value = true
   try {
-    const res: any = await bookmarkApi.getBookmarkList(queryParams)
+    if (!queryParams.currentUser && userStore.userInfo?.username) {
+      queryParams.currentUser = userStore.userInfo.username
+    }
+
+    const params: any = {
+      page: queryParams.page,
+      pageSize: queryParams.pageSize,
+      sortBy: queryParams.sortBy,
+      sortOrder: queryParams.sortOrder
+    }
+
+    if (queryParams.keyword) {
+      params.keyword = queryParams.keyword
+    }
+    if (queryParams.currentUser) {
+      params.currentUser = queryParams.currentUser
+    }
+    if (queryParams.mineOnly) {
+      params.mineOnly = true
+    }
+    if (queryParams.isPrivate !== undefined) {
+      params.isPrivate = queryParams.isPrivate
+    }
+
+    const res: any = await bookmarkApi.getBookmarkList(params)
     if (res.code === 200) {
       bookmarkList.value = res.data.records || []
       total.value = res.data.total || 0
@@ -306,12 +327,17 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid: boolean) => {
     if (!valid) return
 
+    let finalUrl = formData.url.trim()
+    if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+      finalUrl = 'https://' + finalUrl
+    }
+
     submitLoading.value = true
     try {
       if (isEdit.value && formData.id) {
         const res: any = await bookmarkApi.updateBookmark(formData.id, {
           title: formData.title,
-          url: formData.url,
+          url: finalUrl,
           description: formData.description,
           icon: formData.icon
         })
@@ -324,7 +350,7 @@ const handleSubmit = async () => {
       } else {
         const res: any = await bookmarkApi.createBookmark({
           title: formData.title,
-          url: formData.url,
+          url: finalUrl,
           description: formData.description,
           icon: formData.icon,
           createdBy: userStore.userInfo?.username || 'anonymous',
@@ -386,12 +412,11 @@ const handleCopyUrl = async (url: string) => {
 }
 
 const handleOpenUrl = async (url: string, id: number) => {
-  window.open(url, '_blank')
-  try {
-    await bookmarkApi.incrementClickCount(id)
-  } catch (error) {
-    console.error('记录点击次数失败:', error)
+  let finalUrl = url
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    finalUrl = 'https://' + url
   }
+  window.open(finalUrl, '_blank')
 }
 
 const getFavicon = (url: string) => {
@@ -415,6 +440,7 @@ const formatTime = (time: string) => {
   const diff = now.getTime() - date.getTime()
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
+  if (days < 0) return '刚刚'
   if (days === 0) return '今天'
   if (days === 1) return '昨天'
   if (days < 7) return `${days}天前`

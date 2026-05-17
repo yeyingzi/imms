@@ -8,7 +8,6 @@ export interface Bookmark {
   icon?: string
   createdBy?: string
   isPrivate?: number
-  clickCount?: number
   createdAt?: string
   updatedAt?: string
 }
@@ -43,9 +42,5 @@ export const bookmarkApi = {
 
   togglePrivacy(id: number) {
     return request.put(`/v1/bookmarks/${id}/privacy`)
-  },
-
-  incrementClickCount(id: number) {
-    return request.put(`/v1/bookmarks/${id}/click`)
   }
 }

@@ -6,16 +6,17 @@ import com.platform.common.result.Result;
 import com.platform.module.example.entity.Example;
 import com.platform.module.example.service.ExampleService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/v1/example-module")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ExampleController {
 
-    private final ExampleService exampleService;
+    @Autowired
+    private ExampleService exampleService;
 
     @GetMapping("/list")
     public Result<PageResult<Example>> list(
@@ -45,20 +46,20 @@ public class ExampleController {
 
     @PostMapping
     public Result<?> create(@RequestBody Example example) {
-        exampleService.save(example);
+        exampleService.create(example);
         return Result.success("创建成功", null);
     }
 
     @PutMapping("/{id}")
     public Result<?> update(@PathVariable Long id, @RequestBody Example example) {
         example.setId(id);
-        exampleService.updateById(example);
+        exampleService.update(example);
         return Result.success("更新成功", null);
     }
 
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable Long id) {
-        exampleService.removeById(id);
+        exampleService.delete(id);
         return Result.success("删除成功", null);
     }
 }

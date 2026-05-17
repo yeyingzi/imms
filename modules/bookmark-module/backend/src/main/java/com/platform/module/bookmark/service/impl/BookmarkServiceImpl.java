@@ -17,37 +17,23 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
         LambdaQueryWrapper<Bookmark> wrapper = new LambdaQueryWrapper<>();
 
         if (StringUtils.hasText(keyword)) {
-            wrapper.and(w -> w
-                .like(Bookmark::getTitle, keyword)
-                .or()
-                .like(Bookmark::getDescription, keyword)
-                .or()
-                .like(Bookmark::getUrl, keyword)
-            );
-        }
-
-        if (Boolean.TRUE.equals(mineOnly) && StringUtils.hasText(currentUser)) {
-            wrapper.eq(Bookmark::getCreatedBy, currentUser);
+            wrapper.like(Bookmark::getTitle, keyword);
         }
 
         if (isPrivate != null) {
             wrapper.eq(Bookmark::getIsPrivate, isPrivate);
+        } else if (Boolean.TRUE.equals(mineOnly) && StringUtils.hasText(currentUser)) {
+            wrapper.eq(Bookmark::getCreatedBy, currentUser);
+        } else if (StringUtils.hasText(currentUser)) {
+            wrapper.apply("is_private = 0 OR (is_private = 1 AND created_by = {0})", currentUser);
         } else {
-            wrapper.ne(Bookmark::getIsPrivate, 1);
+            wrapper.eq(Bookmark::getIsPrivate, 0);
         }
 
-        if ("clickCount".equals(sortBy)) {
-            if ("asc".equals(sortOrder)) {
-                wrapper.orderByAsc(Bookmark::getClickCount);
-            } else {
-                wrapper.orderByDesc(Bookmark::getClickCount);
-            }
+        if ("asc".equals(sortOrder)) {
+            wrapper.orderByAsc(Bookmark::getCreatedAt);
         } else {
-            if ("asc".equals(sortOrder)) {
-                wrapper.orderByAsc(Bookmark::getCreatedAt);
-            } else {
-                wrapper.orderByDesc(Bookmark::getCreatedAt);
-            }
+            wrapper.orderByDesc(Bookmark::getCreatedAt);
         }
 
         return this.page(page, wrapper);
@@ -65,9 +51,6 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
         }
         if (bookmark.getIsPrivate() == null) {
             bookmark.setIsPrivate(0);
-        }
-        if (bookmark.getClickCount() == null) {
-            bookmark.setClickCount(0);
         }
         this.save(bookmark);
     }
@@ -87,15 +70,6 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
         Bookmark bookmark = this.getById(id);
         if (bookmark != null) {
             bookmark.setIsPrivate(bookmark.getIsPrivate() == 0 ? 1 : 0);
-            this.updateById(bookmark);
-        }
-    }
-
-    @Override
-    public void incrementClickCount(Long id) {
-        Bookmark bookmark = this.getById(id);
-        if (bookmark != null) {
-            bookmark.setClickCount(bookmark.getClickCount() + 1);
             this.updateById(bookmark);
         }
     }
