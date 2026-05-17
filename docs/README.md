@@ -8,7 +8,7 @@
 | [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | 项目部署指南（从零到运行） | 运维/使用者 |
 | [SPEC.md](./SPEC.md) | 需求规格说明书 | 产品/开发 |
 | [API_SPEC.md](./API_SPEC.md) | API接口规范文档 | 前端/后端开发 |
-| [MODULE_DEVELOPMENT_GUIDE.md](./MODULE_DEVELOPMENT_GUIDE.md) | 模块开发指南 | 模块开发者 |
+| [MODULE_DEVELOPMENT_GUIDE.md](./MODULE_DEVELOPMENT_GUIDE.md) | 模块开发指南 **(v2.0)** | 模块开发者 |
 | [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | 数据库表结构详解 | 后端开发/运维 |
 | [CHANGELOG.md](./CHANGELOG.md) | 版本更新记录 | 所有人 |
 
@@ -63,18 +63,19 @@
 - ✅ 权限管理接口
 - ✅ 日志查询接口
 
-### MODULE_DEVELOPMENT_GUIDE.md - 模块开发指南
-- ✅ 模块目录结构
+### MODULE_DEVELOPMENT_GUIDE.md - 模块开发指南 **(v2.0)**
+- ✅ 模块目录结构（v2.0 SQL 脚本体系）
 - ✅ module.json配置规范
 - ✅ 前端开发规范
-- ✅ 后端开发规范
-- ✅ 数据库设计规范
+- ✅ 后端开发规范（完整四层架构）
+- ✅ 数据库设计规范（install.sql + uninstall.sql）
 - ✅ 权限编码规范
 - ✅ 模块生命周期管理
-- ✅ 示例模块参考
+- ✅ 示例模块参考（v2.0 生产级模板）
 
 ### CHANGELOG.md - 更新日志
-- ✅ v1.13.0 品牌体验升级（科技感Logo、系统配置联动、移动端适配、权限优化）
+- ✅ **v2.0.0** 模块体系全面升级（生产级模板 + SQL 脚本体系 + 文档体系）
+- ✅ v1.14.0 品牌体验升级（科技感Logo、系统配置联动、移动端适配、权限优化）
 - ✅ v1.12.0 界面全面升级（暗色星空主题、路由过渡动画、管理后台精简）
 - ✅ v1.11.0 模块启用/停用功能实现
 - ✅ v1.10.0 界面优化
@@ -109,6 +110,12 @@
 
 ## 📝 版本信息
 
-当前版本：v1.14.0
+当前版本：**v2.0.0** (2026-05-18)
 
-> **重要提示**：当前版本已完成标准三层架构重构，文件损坏问题已全部修复。
+> **里程碑更新**：
+> - 🆕 新增网址收藏模块 (bookmark-module)
+> - ⭐ 示例模块升级至 v2.0（生产级模板）
+> - 🔧 SQL 脚本体系重构（install.sql + uninstall.sql）
+> - 📚 文档体系完善（三级文档体系成型）
+>
+> **重要提示**：当前版本已完成模块体系的全面升级，建议所有新模块基于 v2.0 标准开发。

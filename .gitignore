@@ -91,6 +91,12 @@ coverage/
 # ===========================
 # 子模块特定
 # ===========================
+# example-module 构建输出和依赖
 modules/example-module/backend/target/
 modules/example-module/frontend/node_modules/
 modules/example-module/frontend/dist/
+
+# bookmark-module 构建输出和依赖
+modules/bookmark-module/backend/target/
+modules/bookmark-module/frontend/node_modules/
+modules/bookmark-module/frontend/dist/

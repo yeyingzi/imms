@@ -54,15 +54,27 @@ project_V/
 │       └── resources/
 │           └── application.yml
 │
-├── modules/                 # 业务模块存放目录
-│   └── example-module/      # 内置示例模块
-│       ├── module.json      # 模块元信息
-│       ├── frontend/src/    # 模块前端代码（Vite 自动扫描）
-│       ├── backend/src/     # 模块后端代码（需复制到主项目）
-│       └── sql/init.sql     # 数据库建表脚本
+├── modules/                 # 业务模块存放目录（v2.0 模块体系）
+│   ├── example-module/     # ⭐ 示例模块 v2.0（生产级模板）
+│   │   ├── module.json     # 模块元信息
+│   │   ├── README.md       # 模块文档
+│   │   ├── frontend/src/   # 模块前端代码（Vite 自动扫描）
+│   │   ├── backend/src/    # 模块后端代码（需复制到主项目）
+│   │   └── sql/            # ⭐ 数据库脚本体系
+│   │       ├── install.sql   # 安装脚本（建表+注册权限，一键执行）
+│   │       └── uninstall.sql # 卸载脚本（清除所有数据）
+│   │
+│   └── bookmark-module/    # 🆕 网址收藏模块（v1.0.0）
+│       ├── module.json     # 模块元信息
+│       ├── README.md       # 模块文档
+│       ├── frontend/src/   # 模块前端代码
+│       ├── backend/src/    # 模块后端代码
+│       └── sql/            # 数据库脚本体系
+│           ├── install.sql   # 安装脚本
+│           └── uninstall.sql # 卸载脚本
 │
 ├── sql/
-│   └── init.sql            # 数据库初始化脚本
+│   └── init.sql            # 数据库初始化脚本（系统表）
 │
 └── docs/                   # 项目文档
 ```
@@ -132,15 +144,29 @@ npm run dev
 
 前端服务：`http://localhost:5173`
 
-#### 5. 执行示例模块 SQL（可选）
+#### 5. 安装模块（可选）
 
+**方式一：示例模块（推荐用于学习）**
 ```bash
-mysql -u root -p platform < modules/example-module/sql/init.sql
+# 一键安装（建表 + 注册权限）
+mysql -u root -p platform < modules/example-module/sql/install.sql
+
+# 如需后端接口，复制后端代码
+xcopy "modules\example-module\backend\src\main\java\com\platform\module\example" ^
+      "backend\src\main\java\com\platform\module\example" /E /I /Y
 ```
 
-#### 6. 复制模块后端代码到主项目（如需使用示例模块接口）
+**方式二：网址收藏模块（推荐用于使用）**
+```bash
+# 一键安装
+mysql -u root -p platform < modules/bookmark-module/sql/install.sql
 
-将 `modules/example-module/backend/src/main/java/com/platform/module/example/` 下所有文件复制到 `backend/src/main/java/com/platform/module/example/`
+# 复制后端代码
+xcopy "modules\bookmark-module\backend\src\main\java\com\platform\module\bookmark" ^
+      "backend\src\main\java\com\platform\module\bookmark" /E /I /Y
+```
+
+> **卸载模块**：执行 `mysql ... < modules/{module-name}/sql/uninstall.sql` 即可完全清除
 
 #### 7. 访问平台
 
@@ -181,6 +207,32 @@ mysql -u root -p platform < modules/example-module/sql/init.sql
 | 登录页 ↔ 任意界面 | 缩放淡入 |
 | 管理后台内部页面切换 | ❌ 即时切换，无动画 |
 | 用户界面内部切换 | 轻柔交叉淡化 |
+
+## 已实现模块
+
+> **版本**：v2.0.0 | 更新日期：2026-05-18
+
+| 模块 | 版本 | 类型 | 说明 | 文档 |
+|:---|:---:|:---|:---|:---|
+| **example-module** | v2.0.0 | 示例/模板 | ⭐ 生产级模块开发模板，可直接复制使用 | [README](modules/example-module/README.md) |
+| **bookmark-module** | v1.0.0 | 业务模块 | 🆕 网址收藏合集，支持隐私保护和搜索功能 | [README](modules/bookmark-module/README.md) |
+
+### 快速开发新模块
+
+```bash
+# 1. 复制示例模块
+cp -r modules/example-module modules/your-module
+
+# 2. 一键安装到数据库
+mysql -u root -p platform < modules/your-module/sql/install.sql
+
+# 3. 复制后端代码（如需后端接口）
+xcopy "modules\your-module\backend\src\..." "backend\src\..." /E /I /Y
+
+# 4. 重启服务 → 刷新浏览器 → 完成！
+```
+
+> 📖 **完整开发教程**：[模块开发指南](docs/MODULE_DEVELOPMENT_GUIDE.md)（v2.0，7步完整教程）
 
 ## 项目文档
 

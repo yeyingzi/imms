@@ -1,25 +1,34 @@
-package com.platform.module.example.entity;
+package com.platform.module.bookmark.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
-@TableName("exm_example")
-public class Example {
+@TableName("bm_bookmark")
+public class Bookmark {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String name;
-    
+    private String title;
+
+    private String url;
+
     private String description;
-    
-    private Integer status;
-    
+
+    private String icon;
+
+    private String createdBy;
+
+    private Integer isPrivate;
+
+    private Integer clickCount;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
-    
+
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 }

@@ -1,65 +1,56 @@
 package com.platform.module.example.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.platform.common.result.PageResult;
 import com.platform.common.result.Result;
 import com.platform.module.example.entity.Example;
-import com.platform.module.example.service.ExampleService;
-import lombok.RequiredArgsConstructor;
+import com.platform.module.example.service.IExampleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/example-module")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ExampleController {
 
     @Autowired
-    private ExampleService exampleService;
+    private IExampleService exampleService;
 
     @GetMapping("/list")
-    public Result<PageResult<Example>> list(
+    public Result<Page<Example>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        
         Page<Example> page = new Page<>(pageNum, pageSize);
-        Page<Example> result = exampleService.selectPage(page);
-
-        PageResult<Example> pageResult = new PageResult<>(
-                result.getRecords(),
-                result.getTotal(),
-                (int) result.getCurrent(),
-                (int) result.getSize()
-        );
-
-        return Result.success(pageResult);
+        LambdaQueryWrapper<Example> wrapper = new LambdaQueryWrapper<>();
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.like(Example::getName, keyword.trim());
+        }
+        
+        wrapper.orderByDesc(Example::getCreatedAt);
+        
+        return Result.success(exampleService.page(page, wrapper));
     }
 
     @GetMapping("/{id}")
     public Result<Example> getById(@PathVariable Long id) {
-        Example example = exampleService.getById(id);
-        if (example == null) {
-            return Result.error(404, "记录不存在");
-        }
-        return Result.success(example);
+        return Result.success(exampleService.getById(id));
     }
 
     @PostMapping
-    public Result<?> create(@RequestBody Example example) {
-        exampleService.create(example);
-        return Result.success("创建成功", null);
+    public Result<Boolean> create(@RequestBody Example example) {
+        return Result.success(exampleService.save(example));
     }
 
     @PutMapping("/{id}")
-    public Result<?> update(@PathVariable Long id, @RequestBody Example example) {
+    public Result<Boolean> update(@PathVariable Long id, @RequestBody Example example) {
         example.setId(id);
-        exampleService.update(example);
-        return Result.success("更新成功", null);
+        return Result.success(exampleService.updateById(example));
     }
 
     @DeleteMapping("/{id}")
-    public Result<?> delete(@PathVariable Long id) {
-        exampleService.delete(id);
-        return Result.success("删除成功", null);
+    public Result<Boolean> delete(@PathVariable Long id) {
+        return Result.success(exampleService.removeById(id));
     }
 }

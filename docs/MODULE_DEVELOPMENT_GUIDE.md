@@ -1,8 +1,41 @@
 # 内网万用平台 - 模块开发指南
 
 > 面向开发者：自定义模块开发和冷加载机制详解
-
+>
+> **版本**：v2.0 | **更新日期**：2026-05-18
+>
 > **前置阅读**：[项目部署指南](./DEPLOYMENT_GUIDE.md) — 了解环境搭建和部署流程
+
+---
+
+## 📋 v2.0 主要更新（2026-05-18）
+
+基于实战经验（bookmark-module 开发）对示例模块和开发指南进行全面升级：
+
+### ✨ 核心改进
+
+1. **SQL 脚本体系重构**
+   - 新增 `install.sql`：一键安装（建表 + 注册模块/权限）
+   - 新增 `uninstall.sql`：完整卸载（清除所有数据）
+   - 遵循**最简原则**：不包含测试数据，只做必要操作
+   - 使用 UNHEX() 确保中文正确存储
+
+2. **示例模块升级至 v2.0**
+   - 添加完整的后端代码模板（Entity + Controller + Service + Mapper）
+   - 前端增加搜索功能、表单验证、空状态处理
+   - 编写完整的 README.md 文档（300+ 行）
+
+3. **文档体系完善**
+   - `modules/README.md` 重构为导航入口页
+   - 开发指南新增 SQL 脚本最佳实践说明
+   - 补充 FAQ（Q7: SQL 脚本体系）
+
+### 📖 迁移指南
+
+如果你有基于 v1.0 的模块，建议：
+- 将 `sql/init.sql` 升级为 `sql/install.sql` + `sql/uninstall.sql`
+- 参考 example-module v2.0 优化前端代码（添加搜索、验证等）
+- 为模块编写 README.md 文档
 
 ---
 
@@ -174,6 +207,11 @@ modules/my-module/backend/src/main/java/com/platform/module/my-module/
 modules/
 └── your-module-name/           # 模块名（小写中划线分隔）
     ├── module.json             # 模块元信息配置
+    ├── README.md               # 模块文档（必写）
+    │
+    ├── sql/                    # ⭐ 数据库脚本体系
+    │   ├── install.sql         # 安装脚本（建表+注册权限，一键执行）
+    │   └── uninstall.sql       # 卸载脚本（清除所有数据）
     │
     ├── frontend/               # ⭐ 前端代码（Vite 自动扫描）
     │   └── src/
@@ -181,15 +219,13 @@ modules/
     │       ├── api/index.ts    # API 接口封装
     │       └── index.ts        # ⭐ 模块入口（核心文件）
     │
-    ├── backend/                # 后端代码（需复制到主项目）
-    │   └── src/main/java/com/platform/module/your-module/
-    │       ├── controller/YourModuleController.java
-    │       ├── service/YourModuleService.java
-    │       ├── service/impl/YourModuleServiceImpl.java
-    │       ├── mapper/YourModuleMapper.java
-    │       └── entity/YourModule.java
-    │
-    └── sql/init.sql            # 数据库建表脚本
+    └── backend/                # 后端代码（需复制到主项目）
+        └── src/main/java/com/platform/module/your-module/
+            ├── entity/YourEntity.java           # 实体类
+            ├── controller/YourController.java   # 控制器
+            ├── service/IYourService.java        # 服务接口
+            ├── service/impl/YourServiceImpl.java # 服务实现
+            └── mapper/YourMapper.java           # Mapper接口
 ```
 
 ### 文件职责说明
@@ -199,9 +235,12 @@ modules/
 | `frontend/src/index.ts` | ✅ 核心 | 定义路由、菜单、权限，导出 ModuleConfig | router + menuStore 自动导入 |
 | `frontend/src/views/Index.vue` | ✅ | 模块主页面 UI | 被 index.ts 的路由引用 |
 | `frontend/src/api/index.ts` | ✅ | API 请求封装 | 被 Index.vue 调用 |
-| `module.json` | 可选 | 模块元信息（名称、版本、依赖等） | 未来扩展用 |
+| `module.json` | 可选 | 模块元信息（名称、版本等） | 未来扩展用 |
+| **`sql/install.sql`** | ⭐推荐 | **安装脚本：建表 + 注册模块和权限** | 一键初始化数据库 |
+| **`sql/uninstall.sql`** | ⭐推荐 | **卸载脚本：清除所有相关数据** | 安全移除模块 |
 | `backend/.../*.java` | 可选 | 后端 CRUD 接口 | 需复制到主项目 |
-| `sql/init.sql` | 可选 | 数据表定义 | 手动在 MySQL 执行 |
+
+> **v2.0 标准变更**：推荐使用 `install.sql` + `uninstall.sql` 替代单一的 `init.sql`，实现一键安装和完整卸载。
 
 ---
 
@@ -682,31 +721,97 @@ public class MyModuleController {
 
 ---
 
-### Step 6：编写数据库脚本 — `sql/init.sql`
+### Step 6：编写数据库脚本 — `sql/install.sql` + `sql/uninstall.sql`
+
+#### 📌 安装脚本 (`install.sql`) - **遵循最简原则**
 
 ```sql
 -- ===========================================
--- 模块：my-module
+-- 模块：my-module | 版本：1.0.0
+-- 使用：mysql -u root -p{password} {database} < install.sql
 -- ===========================================
 
-CREATE TABLE IF NOT EXISTS mm_my_entity (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID',
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- 清理旧数据（支持重复执行）
+DELETE FROM sys_role_permission WHERE permission_id IN (SELECT id FROM sys_permission WHERE code LIKE 'my-module:%');
+DELETE FROM sys_permission WHERE code LIKE 'my-module:%';
+DELETE FROM sys_module WHERE module_key = 'my-module';
+DROP TABLE IF EXISTS mm_my_entity;
+
+-- 1. 创建数据表（只包含必要字段，无测试数据）
+CREATE TABLE mm_my_entity (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL COMMENT '名称',
     description TEXT COMMENT '描述',
     status TINYINT DEFAULT 1 COMMENT '状态(0禁用,1启用)',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_name (name),
     INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='我的模块表';
 
--- 初始化测试数据
-INSERT INTO mm_my_entity (name, description, status) VALUES
-('测试数据1', '这是第一条测试数据', 1),
-('测试数据2', '这是第二条测试数据', 1);
+-- 2. 注册模块到系统表
+INSERT INTO sys_module (module_key, name, version, author, description, icon, status) VALUES
+('my-module', UNHEX('...'), '1.0.0', 'Your Name', UNHEX('...'), 'Icon', 1);
+
+-- 3. 注册菜单权限
+INSERT INTO sys_permission (name, code, type, path, parent_id, sort_order) VALUES
+(UNHEX('...'), 'my-module:view', 1, '/my-module', 0, 99);
+
+SET @menu_id = LAST_INSERT_ID();
+
+-- 4. 注册按钮权限
+INSERT INTO sys_permission (name, code, type, path, parent_id, sort_order) VALUES
+(UNHEX('...'), 'my-module:create', 2, NULL, @menu_id, 1),
+(UNHEX('...'), 'my-module:edit', 2, NULL, @menu_id, 2),
+(UNHEX('...'), 'my-module:delete', 2, NULL, @menu_id, 3);
+
+-- 5. 分配权限给超级管理员
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 1, id FROM sys_permission WHERE code LIKE 'my-module:%';
+
+SELECT '✅ my-module 安装完成' AS '';
 ```
 
-**表命名规范：** `{模块前缀}_{实体名}`，例如模块 `my-module` → 前缀 `mm_`。
+**核心要点**：
+- ✅ **最简原则**：不包含测试数据，只做必要的建表和注册
+- ✅ **支持重复执行**：先清理旧数据再创建，可安全重复运行
+- ✅ **使用 UNHEX()**：确保中文正确存储到数据库
+- ✅ **5步自动化**：清理 → 建表 → 注册模块 → 注册权限 → 分配权限
+
+#### 📌 卸载脚本 (`uninstall.sql`)
+
+```sql
+-- ===========================================
+-- 模块：my-module | 卸载脚本
+-- ===========================================
+
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- Step 1: 删除角色权限关联
+DELETE FROM sys_role_permission
+WHERE permission_id IN (
+    SELECT id FROM sys_permission WHERE code LIKE 'my-module:%'
+);
+
+-- Step 2: 删除权限记录
+DELETE FROM sys_permission WHERE code LIKE 'my-module:%';
+
+-- Step 3: 删除模块注册信息
+DELETE FROM sys_module WHERE module_key = 'my-module';
+
+-- Step 4: 删除数据表
+DROP TABLE IF EXISTS mm_my_entity;
+```
+
+**核心要点**：
+- ✅ **纯粹卸载**：清除所有相关数据，无残留
+- ✅ **顺序重要**：先删关联，再删权限，最后删表
+
+**表命名规范：** `{模块前缀}_{实体名}`，例如模块 `bookmark-module` → 前缀 `bm_`。
 
 ---
 
@@ -716,10 +821,11 @@ INSERT INTO mm_my_entity (name, description, status) VALUES
 
 ```
 ① 【仅后端模块需要】复制 Java 文件
-   源: modules/my-module/backend/src/main/java/com/platform/module/my-module/*
-   目标: backend/src/main/java/com/platform/module/my-module/*
+   源: modules/my-module/backend/src/main/java/com/platform/module/my/*
+   目标: backend/src/main/java/com/platform/module/my/*
 
-② 在 MySQL 中执行 sql/init.sql（建表+初始化数据）
+② 执行安装脚本初始化数据库（一键完成建表+注册）
+   mysql -u root -p{password} {database} < modules/my-module/sql/install.sql
 
 ③ 重启后端服务（新 Controller 生效）
 
@@ -732,6 +838,8 @@ INSERT INTO mm_my_entity (name, description, status) VALUES
 ```
 
 > **纯前端模块**（无后端代码）：只需执行 ②④⑤ 步骤。
+>
+> **卸载模块**：执行 `mysql ... < modules/my-module/sql/uninstall.sql` 即可完全清除。
 
 ---
 
@@ -759,21 +867,27 @@ INSERT INTO mm_my_entity (name, description, status) VALUES
 
 | 文件 | 核心要点 |
 |------|---------|
-| `sql/init.sql` | `CREATE TABLE IF NOT EXISTS` + `INSERT` 测试数据 |
+| **安装脚本** `sql/install.sql` | 建表 + 注册模块和权限，**遵循最简原则**（无测试数据） |
+| **卸载脚本** `sql/uninstall.sql` | 清除权限关联 → 权限记录 → 模块注册 → 数据表 |
 
 ---
 
 ## 5. 关键文件参考
 
-### 示例模块（可直接复制修改）
+### 示例模块（v2.0 生产级模板，可直接复制修改）
 
 | 文件 | 内容概要 |
 |------|---------|
-| [example-module/frontend/src/index.ts](../modules/example-module/frontend/src/index.ts) | 模块入口：1 个路由 + 1 个菜单 + 5 个权限 |
-| [example-module/frontend/src/views/Index.vue](../modules/example-module/frontend/src/views/Index.vue) | 模块主页：表格 + 分页 + CRUD |
-| [example-module/frontend/src/api/index.ts](../modules/example-module/frontend/src/api/index.ts) | API 封装：5 个标准方法 |
-| [example-module/backend/.../ExampleController.java](../modules/example-module/backend/src/main/java/com/platform/module/example/controller/ExampleController.java) | REST 控制器完整示例 |
-| [example-module/sql/init.sql](../modules/example-module/sql/init.sql) | 建表脚本 + 3 条测试数据 |
+| [example-module/module.json](../modules/example-module/module.json) | 模块元信息（精简配置） |
+| [example-module/frontend/src/index.ts](../modules/example-module/frontend/src/index.ts) | 模块入口：1 个路由 + 1 个菜单 + 4 个权限 |
+| [example-module/frontend/src/views/Index.vue](../modules/example-module/frontend/src/views/Index.vue) | 模块主页：**搜索** + 表格 + 分页 + CRUD + **表单验证** |
+| [example-module/frontend/src/api/index.ts](../modules/example-module/frontend/src/api/index.ts) | API 封装：5 个标准方法 + TypeScript 类型 |
+| [example-module/backend/.../entity/Example.java](../modules/example-module/backend/src/main/java/com/platform/module/example/entity/Example.java) | 实体类模板（Lombok + MyBatis Plus） |
+| [example-module/backend/.../controller/ExampleController.java](../modules/example-module/backend/src/main/java/com/platform/module/example/controller/ExampleController.java) | REST 控制器（**支持 keyword 搜索**） |
+| [example-module/backend/.../service/impl/ExampleServiceImpl.java](../modules/example-module/backend/src/main/java/com/platform/module/example/service/impl/ExampleServiceImpl.java) | 服务实现（**不重复包装父类方法**） |
+| **[example-module/sql/install.sql](../modules/example-module/sql/install.sql)** | **⭐ 安装脚本：建表 + 注册（无测试数据，遵循最简原则）** |
+| **[example-module/sql/uninstall.sql](../modules/example-module/sql/uninstall.sql)** | **⭐ 卸载脚本：完整清除所有数据** |
+| [example-module/README.md](../modules/example-module/README.md) | 模块文档（快速上手 + FAQ） |
 
 ### 平台核心文件（理解机制必读）
 
@@ -876,6 +990,23 @@ const routes: RouteRecordRaw[] = [
 
 跳过后端代码和 SQL 脚本即可。
 
+### Q7：v2.0 SQL 脚本体系（install.sql vs init.sql）
+
+**Q: 为什么要用 install.sql 替代 init.sql？**
+A:
+- `init.sql` 只建表，需要手动注册模块
+- `install.sql` 一键完成：建表 + 注册模块 + 注册权限 + 分配权限
+- `uninstall.sql` 完整卸载，无残留
+
+**Q: install.sql 应该包含测试数据吗？**
+A: ❌ **不应该**。遵循最简原则，只包含必要的建表和注册操作。测试数据应在 README 中说明如何单独添加。
+
+**Q: 如何确保中文正确存储？**
+A: 使用 UNHEX() 函数插入中文，避免终端编码问题。
+
+**Q: install.sql 可以重复执行吗？**
+A: ✅ 可以。脚本开头会先清理旧数据（DELETE/DROP），支持安全重复运行。
+
 ---
 
 ## 附录：快速检查清单
@@ -887,7 +1018,7 @@ const routes: RouteRecordRaw[] = [
 - [ ] `frontend/src/index.ts` 存在且 `export default` 正确的配置对象
 - [ ] `index.ts` 中组件导入使用**相对路径** `./views/xxx.vue`
 - [ ] `index.ts` 中路由 `path` 以 `/` 开头
-- [ ] `views/Index.vue` 页面组件已完成
+- [ ] `views/Index.vue` 页面组件已完成（建议包含搜索、分页、表单验证）
 - [ ] `api/index.ts` API 路径使用 `/v1/{module-key}/...`
 
 **后端部分（如需要）：**
@@ -896,10 +1027,16 @@ const routes: RouteRecordRaw[] = [
 - [ ] ServiceImpl **没有**重复包装父类方法（getById/save 等）
 - [ ] Entity 的 `@TableName` 与 SQL 建表的表名一致
 
-**数据库部分：**
-- [ ] 已在 MySQL 中执行 `sql/init.sql` 建表
+**数据库部分（v2.0 标准）：**
+- [ ] 已创建 **`sql/install.sql`**（建表 + 注册模块和权限，遵循最简原则）
+- [ ] 已创建 **`sql/uninstall.sql`**（完整卸载脚本）
+- [ ] install.sql 使用 UNHEX() 函数确保中文正确存储
+- [ ] install.sql 支持重复执行（先清理旧数据）
 
 **部署操作：**
+- [ ] **已执行 install.sql 初始化数据库**
 - [ ] **重启了后端服务**（如有后端代码）
 - [ ] **重启了前端 dev server**
 - [ ] **刷新浏览器验证**
+
+> **v2.0 变更**：推荐使用 `install.sql` + `uninstall.sql` 替代单一的 `init.sql`

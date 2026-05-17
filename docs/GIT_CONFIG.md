@@ -12,7 +12,7 @@
 | 仓库地址 | https://github.com/yeyingzi/imms.git |
 | 所有者 | yeyingzi |
 | 默认分支 | main |
-| 当前版本 | v1.14.0 |
+| 当前版本 | **v2.0.0** |
 
 ---
 
@@ -190,14 +190,18 @@ cp backend/src/main/resources/application.yml.example backend/src/main/resources
 ### 创建版本标签
 
 ```bash
-# 创建标签
-git tag -a v1.14.0 -m "v1.14.0 发布"
+# 创建 v2.0.0 标签（里程碑版本）
+git tag -a v2.0.0 -m "v2.0.0 模块体系全面升级"
 
 # 推送标签
-git push origin v1.14.0
+git push origin v2.0.0
 
 # 或推送所有标签
 git push origin --tags
+
+# 示例：创建功能版本标签
+git tag -a v1.14.0 -m "v1.14.0 发布"
+git push origin v1.14.0
 ```
 
 ### 查看标签
