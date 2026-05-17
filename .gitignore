@@ -81,7 +81,7 @@ coverage/
 *.war
 *.ear
 
-# Maven Wrapper（如果不需要）
+# NPM Wrapper（如果不需要）
 # !mvnw
 # !mvnw.cmd
 
@@ -89,7 +89,17 @@ coverage/
 # !frontend/node_modules/.bin/
 
 # ===========================
-# 注意：modules/ 目录下的模块是完整的代码仓库
-# 包含依赖和构建产物，不应被忽略
-# 这样可以保证模块的完整性和可移植性
+# 模块构建产物（不包含源码）
+# 注意：只忽略可重新生成的构建产物和依赖
+# 源代码（.java/.ts/.vue/.sql 等）会被正常追踪
 # ===========================
+
+# example-module
+modules/example-module/backend/target/
+modules/example-module/frontend/node_modules/
+modules/example-module/frontend/dist/
+
+# bookmark-module
+modules/bookmark-module/backend/target/
+modules/bookmark-module/frontend/node_modules/
+modules/bookmark-module/frontend/dist/
