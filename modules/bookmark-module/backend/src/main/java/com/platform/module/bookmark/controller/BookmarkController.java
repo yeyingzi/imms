@@ -25,13 +25,10 @@ public class BookmarkController {
             @RequestParam(defaultValue = "12") Integer pageSize,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String currentUser,
-            @RequestParam(required = false) Boolean mineOnly,
-            @RequestParam(required = false) Integer isPrivate,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortOrder) {
+            @RequestParam(required = false) Boolean mineOnly) {
 
         Page<Bookmark> pageParam = new Page<>(page, pageSize);
-        Page<Bookmark> result = bookmarkService.getBookmarkList(pageParam, keyword, currentUser, mineOnly, isPrivate, sortBy, sortOrder);
+        Page<Bookmark> result = bookmarkService.getBookmarkList(pageParam, keyword, currentUser, mineOnly);
         return Result.success(result);
     }
 

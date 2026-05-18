@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.platform.module.bookmark.entity.Bookmark;
 
 public interface BookmarkService extends IService<Bookmark> {
-    Page<Bookmark> getBookmarkList(Page<Bookmark> page, String keyword, String currentUser, Boolean mineOnly, Integer isPrivate, String sortBy, String sortOrder);
+    Page<Bookmark> getBookmarkList(Page<Bookmark> page, String keyword, String currentUser, Boolean mineOnly);
     Bookmark getBookmarkById(Long id);
     void createBookmark(Bookmark bookmark);
     void updateBookmark(Bookmark bookmark);

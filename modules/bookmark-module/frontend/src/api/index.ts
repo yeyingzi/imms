@@ -18,9 +18,6 @@ export interface BookmarkQuery {
   keyword?: string
   currentUser?: string
   mineOnly?: boolean
-  isPrivate?: number
-  sortBy?: string
-  sortOrder?: string
 }
 
 export const bookmarkApi = {

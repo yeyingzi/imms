@@ -13,16 +13,14 @@ import org.springframework.util.StringUtils;
 public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> implements BookmarkService {
 
     @Override
-    public Page<Bookmark> getBookmarkList(Page<Bookmark> page, String keyword, String currentUser, Boolean mineOnly, Integer isPrivate, String sortBy, String sortOrder) {
+    public Page<Bookmark> getBookmarkList(Page<Bookmark> page, String keyword, String currentUser, Boolean mineOnly) {
         LambdaQueryWrapper<Bookmark> wrapper = new LambdaQueryWrapper<>();
 
         if (StringUtils.hasText(keyword)) {
             wrapper.like(Bookmark::getTitle, keyword);
         }
 
-        if (isPrivate != null) {
-            wrapper.eq(Bookmark::getIsPrivate, isPrivate);
-        } else if (Boolean.TRUE.equals(mineOnly) && StringUtils.hasText(currentUser)) {
+        if (Boolean.TRUE.equals(mineOnly) && StringUtils.hasText(currentUser)) {
             wrapper.eq(Bookmark::getCreatedBy, currentUser);
         } else if (StringUtils.hasText(currentUser)) {
             wrapper.apply("is_private = 0 OR (is_private = 1 AND created_by = {0})", currentUser);
@@ -30,11 +28,7 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
             wrapper.eq(Bookmark::getIsPrivate, 0);
         }
 
-        if ("asc".equals(sortOrder)) {
-            wrapper.orderByAsc(Bookmark::getCreatedAt);
-        } else {
-            wrapper.orderByDesc(Bookmark::getCreatedAt);
-        }
+        wrapper.orderByDesc(Bookmark::getCreatedAt);
 
         return this.page(page, wrapper);
     }
