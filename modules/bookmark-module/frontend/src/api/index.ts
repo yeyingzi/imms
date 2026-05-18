@@ -29,15 +29,15 @@ export const bookmarkApi = {
     return request.post('/v1/bookmarks', data)
   },
 
-  updateBookmark(id: number, data: Bookmark) {
-    return request.put(`/v1/bookmarks/${id}`, data)
+  updateBookmark(id: number, currentUser: string, data: Bookmark) {
+    return request.put(`/v1/bookmarks/${id}?currentUser=${encodeURIComponent(currentUser)}`, data)
   },
 
-  deleteBookmark(id: number) {
-    return request.delete(`/v1/bookmarks/${id}`)
+  deleteBookmark(id: number, currentUser: string) {
+    return request.delete(`/v1/bookmarks/${id}?currentUser=${encodeURIComponent(currentUser)}`)
   },
 
-  togglePrivacy(id: number) {
-    return request.put(`/v1/bookmarks/${id}/privacy`)
+  togglePrivacy(id: number, currentUser: string) {
+    return request.put(`/v1/bookmarks/${id}/privacy?currentUser=${encodeURIComponent(currentUser)}`)
   }
 }

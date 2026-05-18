@@ -638,9 +638,38 @@ GET /api/v1/users?username=admin&status=1&pageNum=1&pageSize=10
 }
 ```
 
-### 7.6 获取角色权限
+### 7.6 获取权限列表
+
+**接口地址：** `GET /api/v1/roles/permissions`
+
+**说明：** 获取所有权限，用于角色权限分配
+
+**成功响应：**
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": 1,
+      "name": "用户管理",
+      "code": "user-menu",
+      "type": 1,
+      "path": "/user",
+      "parentId": 0,
+      "sortOrder": 10
+    }
+  ],
+  "timestamp": 1715971200000
+}
+```
+
+### 7.7 获取角色权限
 
 **接口地址：** `GET /api/v1/roles/{id}/permissions`
+
+**说明：** 获取指定角色已分配的权限ID列表
 
 **成功响应：**
 
@@ -653,9 +682,11 @@ GET /api/v1/users?username=admin&status=1&pageNum=1&pageSize=10
 }
 ```
 
-### 7.7 分配角色权限
+### 7.8 分配角色权限
 
 **接口地址：** `PUT /api/v1/roles/{id}/permissions`
+
+**说明：** 为指定角色分配权限
 
 **请求参数：**
 
@@ -801,98 +832,9 @@ GET /api/v1/users?username=admin&status=1&pageNum=1&pageSize=10
 
 ---
 
-## 9. 权限管理接口
+## 9. 系统配置接口
 
-### 9.1 查询权限列表
-
-**接口地址：** `GET /api/v1/permissions`
-
-**成功响应：**
-
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": [
-    {
-      "id": 1,
-      "moduleId": null,
-      "name": "用户管理",
-      "code": "user:view",
-      "type": 1,
-      "path": "/user",
-      "parentId": 0,
-      "sortOrder": 1,
-      "createdAt": "2026-05-17 10:00:00"
-    }
-  ],
-  "timestamp": 1715971200000
-}
-```
-
-### 9.2 创建权限
-
-**接口地址：** `POST /api/v1/permissions`
-
-**请求参数：**
-
-```json
-{
-  "name": "新增用户",
-  "code": "user:add",
-  "type": 2,
-  "path": null,
-  "parentId": 1,
-  "sortOrder": 1
-}
-```
-
-**成功响应：**
-
-```json
-{
-  "code": 200,
-  "message": "创建成功",
-  "data": null,
-  "timestamp": 1715971200000
-}
-```
-
-### 9.3 更新权限
-
-**接口地址：** `PUT /api/v1/permissions/{id}`
-
-**成功响应：**
-
-```json
-{
-  "code": 200,
-  "message": "更新成功",
-  "data": null,
-  "timestamp": 1715971200000
-}
-```
-
-### 9.4 删除权限
-
-**接口地址：** `DELETE /api/v1/permissions/{id}`
-
-**成功响应：**
-
-```json
-{
-  "code": 200,
-  "message": "删除成功",
-  "data": null,
-  "timestamp": 1715971200000
-}
-```
-
----
-
-## 10. 系统配置接口
-
-### 10.1 查询配置列表
+### 9.1 查询配置列表
 
 **接口地址：** `GET /api/v1/configs`
 

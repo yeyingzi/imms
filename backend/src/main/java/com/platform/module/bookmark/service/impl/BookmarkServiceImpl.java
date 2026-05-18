@@ -50,21 +50,47 @@ public class BookmarkServiceImpl extends ServiceImpl<BookmarkMapper, Bookmark> i
     }
 
     @Override
-    public void updateBookmark(Bookmark bookmark) {
+    public void updateBookmark(Long id, String currentUser, Bookmark bookmark) {
+        Bookmark existing = this.getById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("书签不存在");
+        }
+
+        if (!existing.getCreatedBy().equals(currentUser)) {
+            throw new SecurityException("无权限修改他人的书签");
+        }
+
+        bookmark.setId(id);
+        bookmark.setCreatedBy(existing.getCreatedBy());
         this.updateById(bookmark);
     }
 
     @Override
-    public void deleteBookmark(Long id) {
+    public void deleteBookmark(Long id, String currentUser) {
+        Bookmark existing = this.getById(id);
+        if (existing == null) {
+            throw new IllegalArgumentException("书签不存在");
+        }
+
+        if (!existing.getCreatedBy().equals(currentUser)) {
+            throw new SecurityException("无权限删除他人的书签");
+        }
+
         this.removeById(id);
     }
 
     @Override
-    public void togglePrivacy(Long id) {
+    public void togglePrivacy(Long id, String currentUser) {
         Bookmark bookmark = this.getById(id);
-        if (bookmark != null) {
-            bookmark.setIsPrivate(bookmark.getIsPrivate() == 0 ? 1 : 0);
-            this.updateById(bookmark);
+        if (bookmark == null) {
+            throw new IllegalArgumentException("书签不存在");
         }
+
+        if (!bookmark.getCreatedBy().equals(currentUser)) {
+            throw new SecurityException("无权限修改他人的书签");
+        }
+
+        bookmark.setIsPrivate(bookmark.getIsPrivate() == 0 ? 1 : 0);
+        this.updateById(bookmark);
     }
 }

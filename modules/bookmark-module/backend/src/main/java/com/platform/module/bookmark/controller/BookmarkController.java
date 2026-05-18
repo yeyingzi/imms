@@ -47,11 +47,17 @@ public class BookmarkController {
     }
 
     @PutMapping("/{id}")
-    public Result<Void> updateBookmark(@PathVariable Long id, @RequestBody Bookmark bookmark) {
+    public Result<Void> updateBookmark(
+            @PathVariable Long id,
+            @RequestParam String currentUser,
+            @RequestBody Bookmark bookmark) {
         try {
             bookmark.setId(id);
-            bookmarkService.updateBookmark(bookmark);
+            bookmarkService.updateBookmark(id, currentUser, bookmark);
             return Result.success();
+        } catch (SecurityException e) {
+            logger.warn("更新书签权限不足: id={}, currentUser={}", id, currentUser);
+            return Result.error(403, "无权限修改他人的书签");
         } catch (Exception e) {
             logger.error("更新书签失败", e);
             return Result.error(500, "更新失败: " + e.getMessage());
@@ -59,10 +65,15 @@ public class BookmarkController {
     }
 
     @DeleteMapping("/{id}")
-    public Result<Void> deleteBookmark(@PathVariable Long id) {
+    public Result<Void> deleteBookmark(
+            @PathVariable Long id,
+            @RequestParam String currentUser) {
         try {
-            bookmarkService.deleteBookmark(id);
+            bookmarkService.deleteBookmark(id, currentUser);
             return Result.success();
+        } catch (SecurityException e) {
+            logger.warn("删除书签权限不足: id={}, currentUser={}", id, currentUser);
+            return Result.error(403, "无权限删除他人的书签");
         } catch (Exception e) {
             logger.error("删除书签失败", e);
             return Result.error(500, "删除失败: " + e.getMessage());
@@ -70,10 +81,15 @@ public class BookmarkController {
     }
 
     @PutMapping("/{id}/privacy")
-    public Result<Void> togglePrivacy(@PathVariable Long id) {
+    public Result<Void> togglePrivacy(
+            @PathVariable Long id,
+            @RequestParam String currentUser) {
         try {
-            bookmarkService.togglePrivacy(id);
+            bookmarkService.togglePrivacy(id, currentUser);
             return Result.success();
+        } catch (SecurityException e) {
+            logger.warn("切换隐私状态权限不足: id={}, currentUser={}", id, currentUser);
+            return Result.error(403, "无权限修改他人的书签");
         } catch (Exception e) {
             logger.error("切换隐私状态失败", e);
             return Result.error(500, "操作失败");

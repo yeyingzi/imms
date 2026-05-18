@@ -57,7 +57,7 @@ modules/{module-name}/
 | 模块名称 | 版本 | 说明 | 文档 |
 | :--- | :--- | :--- | :--- |
 | **example-module** | v2.0.0 | 示例模块（开发模板）⭐ | [README](./example-module/README.md) |
-| bookmark-module | v1.0.0 | 网址收藏合集 | [README](./bookmark-module/README.md) |
+| bookmark-module | v1.1.0 | 网址收藏合集 | [README](./bookmark-module/README.md) |
 
 ---
 

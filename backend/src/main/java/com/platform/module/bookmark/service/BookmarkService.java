@@ -8,7 +8,7 @@ public interface BookmarkService extends IService<Bookmark> {
     Page<Bookmark> getBookmarkList(Page<Bookmark> page, String keyword, String currentUser, Boolean mineOnly);
     Bookmark getBookmarkById(Long id);
     void createBookmark(Bookmark bookmark);
-    void updateBookmark(Bookmark bookmark);
-    void deleteBookmark(Long id);
-    void togglePrivacy(Long id);
+    void updateBookmark(Long id, String currentUser, Bookmark bookmark);
+    void deleteBookmark(Long id, String currentUser);
+    void togglePrivacy(Long id, String currentUser);
 }

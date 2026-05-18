@@ -1,7 +1,7 @@
 -- ============================================
 -- 内网万用平台 - 数据库初始化脚本
--- 版本: 1.0
--- 说明: 包含所有表结构和初始数据
+-- 版本: 2.0
+-- 说明: 精简版，只包含核心表结构
 -- 用户名: admin
 -- 密码: Admin@123456 (BCrypt加密)
 -- ============================================
@@ -24,9 +24,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     avatar VARCHAR(255) COMMENT '头像URL',
     status TINYINT DEFAULT 1 COMMENT '状态(0禁用,1启用)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_username (username),
-    INDEX idx_status (status)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户信息表';
 
 -- ============================================
@@ -38,8 +36,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
     code VARCHAR(50) NOT NULL UNIQUE COMMENT '角色编码',
     description VARCHAR(255) COMMENT '角色描述',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_code (code)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色信息表';
 
 -- ============================================
@@ -53,9 +50,7 @@ CREATE TABLE IF NOT EXISTS sys_permission (
     path VARCHAR(255) COMMENT '菜单路径',
     parent_id BIGINT DEFAULT 0 COMMENT '父级权限ID',
     sort_order INT DEFAULT 0 COMMENT '排序号',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    INDEX idx_code (code),
-    INDEX idx_parent_id (parent_id)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限信息表';
 
 -- ============================================
@@ -71,9 +66,7 @@ CREATE TABLE IF NOT EXISTS sys_module (
     icon VARCHAR(100) COMMENT '图标名称',
     status TINYINT DEFAULT 1 COMMENT '状态(0停用,1启用)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_module_key (module_key),
-    INDEX idx_status (status)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='模块信息表';
 
 -- ============================================
@@ -82,9 +75,7 @@ CREATE TABLE IF NOT EXISTS sys_module (
 CREATE TABLE IF NOT EXISTS sys_user_role (
     user_id BIGINT NOT NULL COMMENT '用户ID',
     role_id BIGINT NOT NULL COMMENT '角色ID',
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES sys_user(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE
+    PRIMARY KEY (user_id, role_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- ============================================
@@ -93,9 +84,7 @@ CREATE TABLE IF NOT EXISTS sys_user_role (
 CREATE TABLE IF NOT EXISTS sys_role_permission (
     role_id BIGINT NOT NULL COMMENT '角色ID',
     permission_id BIGINT NOT NULL COMMENT '权限ID',
-    PRIMARY KEY (role_id, permission_id),
-    FOREIGN KEY (role_id) REFERENCES sys_role(id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES sys_permission(id) ON DELETE CASCADE
+    PRIMARY KEY (role_id, permission_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关联表';
 
 -- ============================================
@@ -109,9 +98,7 @@ CREATE TABLE IF NOT EXISTS sys_operation_log (
     action VARCHAR(100) COMMENT '操作动作',
     description VARCHAR(500) COMMENT '操作描述',
     ip_address VARCHAR(50) COMMENT '客户端IP',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
 -- ============================================
@@ -126,10 +113,7 @@ CREATE TABLE IF NOT EXISTS sys_login_log (
     error_msg VARCHAR(255) COMMENT '错误信息',
     ip_address VARCHAR(50) COMMENT '客户端IP',
     user_agent VARCHAR(500) COMMENT '浏览器信息',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间',
-    INDEX idx_user_id (user_id),
-    INDEX idx_username (username),
-    INDEX idx_created_at (created_at)
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '登录时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='登录日志表';
 
 -- ============================================
@@ -141,8 +125,7 @@ CREATE TABLE IF NOT EXISTS sys_config (
     config_value TEXT COMMENT '配置值',
     description VARCHAR(255) COMMENT '配置说明',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_config_key (config_key)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统配置表';
 
 -- ============================================
@@ -197,57 +180,16 @@ INSERT INTO sys_permission (name, code, type, path, parent_id, sort_order) VALUE
 ('导出日志', 'log:export', 2, NULL, 5, 2),
 ('删除日志', 'log:delete', 2, NULL, 5, 3);
 
--- 插入菜单权限 - 示例模块
-INSERT INTO sys_permission (name, code, type, path, parent_id, sort_order) VALUES
-('示例模块', 'example-module-menu', 1, '/example-module', 0, 60);
-
--- 插入按钮权限 - 示例模块
-INSERT INTO sys_permission (name, code, type, path, parent_id, sort_order) VALUES
-('查看模块', 'example-module:view', 2, NULL, 6, 1),
-('列表查看', 'example-module:list', 2, NULL, 6, 2),
-('创建', 'example-module:create', 2, NULL, 6, 3),
-('编辑', 'example-module:edit', 2, NULL, 6, 4),
-('删除', 'example-module:delete', 2, NULL, 6, 5);
-
 -- 为超级管理员分配所有权限
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 1, id FROM sys_permission;
 
 -- 插入管理员用户 (密码: Admin@123456)
--- BCrypt加密后的密码
 INSERT INTO sys_user (username, password, real_name, status) VALUES
 ('admin', '$2a$10$oaJUvFJBBrNZBlto68huRupWDIh4cNWNRR5ieuRc5bhruERFee.qq', '管理员', 1);
 
 -- 为管理员分配超级管理员角色
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
-
--- ============================================
--- 初始化模块数据
--- ============================================
-INSERT INTO sys_module (module_key, name, version, author, description, icon, status) VALUES
-('example-module', '示例模块', '1.0.0', 'Platform Team', '示例模块，用于展示模块开发规范', 'Box', 1);
-
--- ============================================
--- 初始化系统配置
--- ============================================
-INSERT INTO sys_config (config_key, config_value, description) VALUES
-('platformName', '内网万用平台', '平台显示名称'),
-('logo', '', '平台Logo URL'),
-('themeColor', '#409eff', '主题颜色'),
-('loginTimeout', '120', '登录超时时间(分钟)'),
-('passwordMinLength', '6', '密码最小长度'),
-('maxLoginFailures', '5', '登录失败锁定次数'),
-('lockoutDuration', '15', '登录锁定时间(分钟)'),
-('logRetentionDays', '90', '日志保留天数');
-
--- ============================================
--- 优化：添加复合索引
--- ============================================
-
-ALTER TABLE sys_operation_log ADD INDEX idx_module_action (module, action);
-ALTER TABLE sys_operation_log ADD INDEX idx_username_created (username, created_at);
-ALTER TABLE sys_login_log ADD INDEX idx_status_created (status, created_at);
-ALTER TABLE sys_login_log ADD INDEX idx_user_created (user_id, created_at);
 
 -- ============================================
 -- 完成

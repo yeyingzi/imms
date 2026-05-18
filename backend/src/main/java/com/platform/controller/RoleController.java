@@ -2,7 +2,9 @@ package com.platform.controller;
 
 import com.platform.common.result.PageResult;
 import com.platform.common.result.Result;
+import com.platform.entity.Permission;
 import com.platform.entity.Role;
+import com.platform.service.PermissionService;
 import com.platform.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,13 @@ import java.util.List;
 public class RoleController {
 
     private final RoleService roleService;
+    private final PermissionService permissionService;
+
+    @GetMapping("/permissions")
+    public Result<List<Permission>> getAllPermissions() {
+        List<Permission> permissions = permissionService.getPermissionList();
+        return Result.success(permissions);
+    }
 
     @GetMapping
     public Result<PageResult<Role>> list(

@@ -15,20 +15,24 @@ config.local.js
 
 # 环境变量示例文件（不被忽略，用于团队协作）
 !.env.example
+!.env.development
+!.env.production
 
 # ===========================
 # 后端敏感文件
 # ===========================
 # 实际配置文件（包含真实密码等敏感信息）
 backend/src/main/resources/application.yml
-
-# 本地配置文件
 backend/src/main/resources/application-local.yml
 backend/src/main/resources/application-dev.yml
 backend/src/main/resources/application-prod.yml
 
 # Maven 本地仓库
 backend/target/
+
+# Spring Boot devtools
+.backend/.devtools/
+backend/.devtools/
 
 # Gradle 构建文件（如果有）
 # gradle/
@@ -45,9 +49,15 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# 环境变量文件（不被忽略，用于团队协作）
+!frontend/.env.development
+!frontend/.env.production
+
 # IDE 配置（可选，建议保留以便团队协作）
-# .idea/
-# .vscode/settings.json
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
 
 # ===========================
 # 日志和临时文件
@@ -101,8 +111,31 @@ coverage/
 modules/example-module/backend/target/
 modules/example-module/frontend/node_modules/
 modules/example-module/frontend/dist/
+modules/example-module/frontend/.vite/
 
 # bookmark-module
 modules/bookmark-module/backend/target/
 modules/bookmark-module/frontend/node_modules/
 modules/bookmark-module/frontend/dist/
+modules/bookmark-module/frontend/.vite/
+
+# ===========================
+# 缓存文件
+# ===========================
+# Vue / Vite 缓存
+frontend/node_modules/.cache/
+.vite/
+vite.config.ts.timestamp-*
+
+# Spring Boot 缓存
+backend/target/
+
+# ===========================
+# 运行时生成的文件
+# ===========================
+# Java Runtime Parameters
+hs_err_pid*
+*.hprof
+
+# NPM
+*.tgz

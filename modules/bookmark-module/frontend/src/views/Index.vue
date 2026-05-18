@@ -249,26 +249,24 @@ const formRules = {
   ]
 }
 
+const isOwner = (createdBy: string) => {
+  return createdBy === userStore.userInfo?.username
+}
+
 const hasCreatePermission = computed(() => {
-  return userStore.permissions?.includes('bookmark-module:create')
+  return true
 })
 
 const canEdit = (bookmark: Bookmark) => {
-  const isAdmin = userStore.roles?.includes('SUPER_ADMIN')
-  const isOwner = bookmark.createdBy === userStore.userInfo?.username
-  return isAdmin || (isOwner && userStore.permissions?.includes('bookmark-module:edit'))
+  return isOwner(bookmark.createdBy || '')
 }
 
 const canDelete = (bookmark: Bookmark) => {
-  const isAdmin = userStore.roles?.includes('SUPER_ADMIN')
-  const isOwner = bookmark.createdBy === userStore.userInfo?.username
-  return isAdmin || (isOwner && userStore.permissions?.includes('bookmark-module:delete'))
+  return isOwner(bookmark.createdBy || '')
 }
 
 const canTogglePrivacy = (bookmark: Bookmark) => {
-  const isAdmin = userStore.roles?.includes('SUPER_ADMIN')
-  const isOwner = bookmark.createdBy === userStore.userInfo?.username
-  return isAdmin || isOwner
+  return isOwner(bookmark.createdBy || '')
 }
 
 onMounted(() => {
@@ -364,8 +362,9 @@ const handleSubmit = async () => {
 
     submitLoading.value = true
     try {
+      const currentUser = userStore.userInfo?.username || 'anonymous'
       if (isEdit.value && formData.id) {
-        const res: any = await bookmarkApi.updateBookmark(formData.id, {
+        const res: any = await bookmarkApi.updateBookmark(formData.id, currentUser, {
           title: formData.title,
           url: finalUrl,
           description: formData.description
@@ -381,9 +380,8 @@ const handleSubmit = async () => {
           title: formData.title,
           url: finalUrl,
           description: formData.description,
-          createdBy: userStore.userInfo?.username || 'anonymous',
-          isPrivate: 0,
-          clickCount: 0
+          createdBy: currentUser,
+          isPrivate: 0
         })
         if (res.code === 200) {
           ElMessage.success('创建成功')
@@ -409,23 +407,27 @@ const handleSubmit = async () => {
 
 const handleDelete = async (id: number) => {
   try {
-    await bookmarkApi.deleteBookmark(id)
+    const currentUser = userStore.userInfo?.username || 'anonymous'
+    await bookmarkApi.deleteBookmark(id, currentUser)
     ElMessage.success('🗑️ 删除成功')
     loadBookmarkList()
-  } catch (error) {
+  } catch (error: any) {
     console.error('删除失败:', error)
-    ElMessage.error('删除失败')
+    const errorMsg = error?.response?.data?.message || '删除失败'
+    ElMessage.error(errorMsg)
   }
 }
 
 const handleTogglePrivacy = async (id: number, value: number) => {
   try {
-    await bookmarkApi.togglePrivacy(id)
+    const currentUser = userStore.userInfo?.username || 'anonymous'
+    await bookmarkApi.togglePrivacy(id, currentUser)
     ElMessage.success(value === 1 ? '🔒 已设为私密' : '🌍 已设为公开')
     loadBookmarkList()
-  } catch (error) {
+  } catch (error: any) {
     console.error('切换隐私状态失败:', error)
-    ElMessage.error('操作失败')
+    const errorMsg = error?.response?.data?.message || '操作失败'
+    ElMessage.error(errorMsg)
   }
 }
 

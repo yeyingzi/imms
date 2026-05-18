@@ -101,9 +101,10 @@ import {
   deleteRole,
   getRolePermissions,
   assignRolePermissions,
-  type Role
+  getPermissionList,
+  type Role,
+  type Permission
 } from '@/api/role'
-import { getPermissionList, type Permission } from '@/api/permission'
 
 const loading = ref(false)
 const tableData = ref<Role[]>([])

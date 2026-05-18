@@ -9,6 +9,17 @@ export interface Role {
   updatedAt?: string
 }
 
+export interface Permission {
+  id?: number
+  name: string
+  code: string
+  type?: number
+  path?: string
+  parentId?: number
+  sortOrder?: number
+  createdAt?: string
+}
+
 export const getRoleList = (params?: { pageNum?: number; pageSize?: number }) => {
   return request.get<{ list: Role[]; total: number; pageNum: number; pageSize: number }>('/v1/roles', { params })
 }
@@ -31,6 +42,10 @@ export const deleteRole = (id: number) => {
 
 export const getRolePermissions = (id: number) => {
   return request.get<number[]>(`/v1/roles/${id}/permissions`)
+}
+
+export const getPermissionList = () => {
+  return request.get<Permission[]>('/v1/roles/permissions')
 }
 
 export const assignRolePermissions = (id: number, permissionIds: number[]) => {

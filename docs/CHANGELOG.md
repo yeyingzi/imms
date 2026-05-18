@@ -1,5 +1,156 @@
 # 更新日志
 
+## v2.0.1 (2026-05-18) 🔒
+
+> **安全修复版本**：修复 bookmark 模块管理员越权漏洞，重构权限控制逻辑。
+
+---
+
+## 🐛 问题修复
+
+### bookmark 模块权限控制重构
+
+#### 发现的问题
+
+在审查代码时发现 bookmark 模块存在**管理员越权漏洞**：
+
+| 问题 | 原代码 | 影响 |
+|------|--------|------|
+| 管理员可操作所有书签 | `isAdmin.value \|\| isOwner(...)` | 管理员可以编辑/删除任何用户的书签 |
+| 后端无权限校验 | 仅前端校验，后端直接操作数据库 | 前端校验可被绕过 |
+| 权限定义混乱 | 文档声称"管理员可操作所有" | 与设计理念冲突 |
+
+#### 修复方案
+
+**1. 后端权限校验重构**
+
+修改文件：
+- `BookmarkController.java` - 添加 `currentUser` 参数和异常处理
+- `BookmarkService.java` - 更新方法签名
+- `BookmarkServiceImpl.java` - 添加权限验证逻辑
+
+核心改进：
+```java
+// ❌ 修复前
+public void deleteBookmark(Long id) {
+    this.removeById(id);  // 无权限校验
+}
+
+// ✅ 修复后
+public void deleteBookmark(Long id, String currentUser) {
+    Bookmark existing = this.getById(id);
+    if (!existing.getCreatedBy().equals(currentUser)) {
+        throw new SecurityException("无权限删除他人的书签");
+    }
+    this.removeById(id);
+}
+```
+
+**2. 前端权限逻辑修正**
+
+修改文件：
+- `Index.vue` - 移除 `isAdmin` 计算属性
+- `api/index.ts` - 更新 API 接口，添加 `currentUser` 参数
+
+核心改进：
+```typescript
+// ❌ 修复前
+const canEdit = (bookmark) => {
+  return isAdmin.value || isOwner(bookmark.createdBy)
+}
+
+// ✅ 修复后
+const canEdit = (bookmark) => {
+  return isOwner(bookmark.createdBy)  // 只有创建者可操作
+}
+```
+
+**3. 数据库结构完善**
+
+修改文件：`install.sql`
+- ✅ 添加 `icon` 字段（与 Entity 保持一致）
+- ✅ 添加性能索引（`title`、`created_at`）
+- ✅ 添加权限控制说明注释
+- ✅ 更新版本号：1.0.2 → 1.1.0
+
+#### 正确的权限模型
+
+```
+┌─────────────────────────────────────────────────┐
+│         bookmark 模块权限控制（修正后）           │
+├─────────────────────────────────────────────────┤
+│                                                  │
+│  【可见性控制】                                   │
+│  ├─ is_private = 0（公开书签）                   │
+│  │  └─ 所有人可见 ✅                            │
+│  └─ is_private = 1（私密书签）                  │
+│     └─ 仅创建者可见 ✅                           │
+│                                                  │
+│  【可操作性控制】                                 │
+│  ├─ 所有人可操作自己创建的书签 ✅                │
+│  └─ 不能操作他人创建的书签 ✅                    │
+│                                                  │
+│  【管理员权限】                                   │
+│  ├─ 可见性：可查看所有书签（用于管理）✅         │
+│  └─ 可操作性：不能越权操作他人书签 ❌             │
+│                                                  │
+└─────────────────────────────────────────────────┘
+```
+
+#### 修复的文件列表
+
+| 文件路径 | 修改内容 |
+|---------|---------|
+| **后端** | |
+| `backend/.../BookmarkController.java` | 添加权限校验、异常处理 |
+| `backend/.../BookmarkService.java` | 更新方法签名 |
+| `backend/.../BookmarkServiceImpl.java` | 添加权限验证逻辑 |
+| **前端** | |
+| `modules/bookmark-module/frontend/src/views/Index.vue` | 移除越权逻辑 |
+| `modules/bookmark-module/frontend/src/api/index.ts` | 更新 API 参数 |
+| **数据库** | |
+| `modules/bookmark-module/sql/install.sql` | 完善表结构、添加注释 |
+| **文档** | |
+| `modules/bookmark-module/README.md` | 更新权限说明 |
+| `modules/README.md` | 更新版本号 |
+
+---
+
+## 📊 本次修复统计
+
+| 指标 | 数量 |
+|------|------|
+| 修改文件 | 8 个 |
+| 后端代码 | +35 行 |
+| 前端代码 | -5 行（移除越权逻辑） |
+| 文档更新 | 3 个文件 |
+
+---
+
+## 🔒 安全改进
+
+### 前后端双重校验
+
+```
+前端：canEdit() → 按钮是否显示
+          ↓
+API 调用：bookmarkApi.updateBookmark(id, currentUser, data)
+          ↓
+后端：SecurityException → 403 Forbidden
+```
+
+### 防御深度
+
+| 层级 | 防护措施 | 状态 |
+|------|---------|------|
+| 前端 UI | 隐藏无权限按钮 | ✅ |
+| 前端 API | 传递 currentUser | ✅ |
+| 后端 Controller | 参数校验 | ✅ |
+| 后端 Service | 业务逻辑校验 | ✅ |
+| 数据库 | 唯一约束（URL） | ✅ |
+
+---
+
 ## v2.0.0 (2026-05-18) 🎉
 
 > **里程碑版本**：模块体系全面升级至生产级标准，新增网址收藏模块，建立完整的 SQL 脚本体系和文档体系。

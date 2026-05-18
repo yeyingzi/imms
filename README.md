@@ -64,7 +64,7 @@ project_V/
 │   │       ├── install.sql   # 安装脚本（建表+注册权限，一键执行）
 │   │       └── uninstall.sql # 卸载脚本（清除所有数据）
 │   │
-│   └── bookmark-module/    # 🆕 网址收藏模块（v1.0.0）
+│   └── bookmark-module/    # 🆕 网址收藏模块（v1.1.0）
 │       ├── module.json     # 模块元信息
 │       ├── README.md       # 模块文档
 │       ├── frontend/src/   # 模块前端代码
@@ -215,7 +215,7 @@ xcopy "modules\bookmark-module\backend\src\main\java\com\platform\module\bookmar
 | 模块 | 版本 | 类型 | 说明 | 文档 |
 |:---|:---:|:---|:---|:---|
 | **example-module** | v2.0.0 | 示例/模板 | ⭐ 生产级模块开发模板，可直接复制使用 | [README](modules/example-module/README.md) |
-| **bookmark-module** | v1.0.0 | 业务模块 | 🆕 网址收藏合集，支持隐私保护和搜索功能 | [README](modules/bookmark-module/README.md) |
+| **bookmark-module** | v1.1.0 | 业务模块 | 🆕 网址收藏合集，支持隐私保护和搜索功能 | [README](modules/bookmark-module/README.md) |
 
 ### 快速开发新模块
 
